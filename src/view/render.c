@@ -1,0 +1,54 @@
+#include "render.h"
+#include <stdio.h>
+
+const char *FILL100 = "█";
+const char *FILL75 = "▓";
+const char *FILL50 = "▒";
+const char *FILL25 = "░";
+const char *FILL0 =  " ";
+
+const char *CLEAR = "\033[2J";
+const char *RESET_CURSOR = "\033[H";
+
+void render(size_t rows, size_t cols, char screen[rows][cols]) {
+    printf("%s", RESET_CURSOR);
+    printf("%s", CLEAR);
+    printf("%s", RESET_CURSOR);
+    for (size_t i = 0; i < rows; i++) {
+        for (size_t j = 0; j < cols; j++) {
+            switch(screen[i][j]) {
+                case -1:
+                    printf("%s%s", FILL50,FILL50);
+                    break;
+                case 0:
+                    printf("%s%s", FILL25,FILL25);
+                    break;
+                case 1:
+                    printf("%s%s", FILL100,FILL100);
+                    break;
+                case 2:
+                    printf("%s%s", FILL50,FILL75);
+                    break;
+            }
+        }
+        printf("\n");
+    }
+}
+
+void get_pov(char screen[30][70], char pov[30][70], int x, int y){
+    int x_offset = x - 35; 
+    int y_offset = y - 15; 
+
+    for(int i = 0; i < 30; i++){
+        for(int j = 0; j < 70; j++){
+            int world_row = i + y_offset;
+            int world_col = j + x_offset;
+
+            if(world_row < 0 || world_row >= 30 || world_col < 0 || world_col >= 70){
+                pov[i][j] = -1; 
+            }else{
+                pov[i][j] = screen[world_row][world_col];
+            }
+        }
+    }
+}
