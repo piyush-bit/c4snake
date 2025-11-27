@@ -20,17 +20,23 @@ int main() {
     enableRawMode();
     pthread_t t;
     pthread_create(&t, NULL, loop, NULL);
-    char screen[SCREEN_HEIGHT][SCREEN_WIDTH];
     char pov[POV_HEIGHT][POV_WIDTH];
-    memset(screen, 0, sizeof(screen));
+    char wall_layer[SCREEN_HEIGHT][SCREEN_WIDTH];
+    char food_layer[SCREEN_HEIGHT][SCREEN_WIDTH];
+    char snake_layer[SCREEN_HEIGHT][SCREEN_WIDTH];
+
     memset(pov, -1, sizeof(pov));
+    memset(wall_layer, 0, sizeof(wall_layer));
+    memset(food_layer, 0, sizeof(food_layer));
+    memset(snake_layer, 0, sizeof(snake_layer));
+
     for(int i = 0; i < SCREEN_HEIGHT; i++){
-        screen[i][0] = 1;
-        screen[i][SCREEN_WIDTH - 1] = 1;
+        wall_layer[i][0] = 1;
+        wall_layer[i][SCREEN_WIDTH - 1] = 1;
     }
     for(int i = 0; i < SCREEN_WIDTH; i++){
-        screen[0][i] = 1;
-        screen[SCREEN_HEIGHT - 1][i] = 1;
+        wall_layer[0][i] = 1;
+        wall_layer[SCREEN_HEIGHT - 1][i] = 1;
     }
     struct snake s = {10, 10, NULL};
     s.next = &(struct snake){10, 9, NULL};
@@ -40,44 +46,46 @@ int main() {
 
     snake* temp = ss.head;
     while(temp){
-        screen[temp->y][temp->x] = 1;
+        snake_layer[temp->y][temp->x] = 1;
         temp = temp->next;
     }
     food food;
     while(1){
         food.x = rand() % SCREEN_WIDTH;
         food.y = rand() % SCREEN_HEIGHT;
-        if(screen[food.y][food.x] == 0){
+        if(wall_layer[food.y][food.x] == 0 && snake_layer[food.y][food.x] == 0){
             break;
         }
     }
-    screen[food.y][food.x] = 2;
+    food_layer[food.y][food.x] = 1;
     int score = 0;
     while(1){
         nanosleep(&ts, NULL);
         snake* end = ss.head;
-        screen[end->y][end->x] = 0;
+        snake_layer[end->y][end->x]--;
         compute_snake(&ss, dir);
         snake* new_head = ss.end;
-        screen[new_head->y][new_head->x] = 1;
-        if(new_head->x < 0 || new_head->x >= SCREEN_WIDTH || new_head->y < 0 || new_head->y >= SCREEN_HEIGHT){
+        if(wall_layer[new_head->y][new_head->x] == 1 || snake_layer[new_head->y][new_head->x] > 0){
             break;
         }
+        snake_layer[new_head->y][new_head->x]++;
+        char screen[SCREEN_HEIGHT][SCREEN_WIDTH];
+        compose_layers(SCREEN_HEIGHT, SCREEN_WIDTH, screen, wall_layer, food_layer, snake_layer);
         get_pov(screen, pov, new_head->x, new_head->y);
-        if(new_head->x == food.x && new_head->y == food.y){
+        if(food_layer[new_head->y][new_head->x] > 0){
             score++;
-            screen[food.y][food.x] = 1;
-            screen[end->y][end->x] = 1;
+            food_layer[new_head->y][new_head->x] = 0;
+            snake_layer[end->y][end->x]++;
             snake* new_end = (snake*)malloc(sizeof(snake));
             new_end->x = end->x;
             new_end->y = end->y;
             new_end->next = ss.head;
             ss.head = new_end;
-            while (screen[food.y][food.x] == 1) {
+            while (wall_layer[food.y][food.x] == 1 || snake_layer[food.y][food.x] > 0) {
                 food.x = rand() % SCREEN_WIDTH;
                 food.y = rand() % SCREEN_HEIGHT;
             }
-            screen[food.y][food.x] = 2;
+            food_layer[food.y][food.x] = 1;
         }
         
         render(POV_HEIGHT, POV_WIDTH, pov);

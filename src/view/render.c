@@ -1,4 +1,5 @@
 #include "render.h"
+#include <stddef.h>
 #include <stdio.h>
 
 const char *FILL100 = "█";
@@ -9,6 +10,22 @@ const char *FILL0 =  " ";
 
 const char *CLEAR = "\033[2J";
 const char *RESET_CURSOR = "\033[H";
+
+void compose_layers(size_t rows, size_t cols, char screen[rows][cols], char wall_layer[rows][cols], char food_layer[rows][cols], char snake_layer[rows][cols]){
+    for(size_t i = 0; i < rows; i++){
+        for(size_t j = 0; j < cols; j++){
+            if (wall_layer[i][j] > 0) {
+                screen[i][j] = 1;
+            } else if (food_layer[i][j] > 0) {
+                screen[i][j] = 2;
+            } else if (snake_layer[i][j] > 0) {
+                screen[i][j] = 1;
+            } else {
+                screen[i][j] = 0;
+            }
+        }
+    }
+}
 
 void render(size_t rows, size_t cols, char screen[rows][cols]) {
     printf("%s", RESET_CURSOR);
