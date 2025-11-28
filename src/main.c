@@ -14,6 +14,10 @@ typedef struct{
     int y;
 } food;
 
+typedef struct{
+    
+} gameState;
+
 struct timespec ts = {0, 0.5 * 100 * 1000 * 1000};
 
 int main() {
@@ -29,7 +33,7 @@ int main() {
     memset(wall_layer, 0, sizeof(wall_layer));
     memset(food_layer, 0, sizeof(food_layer));
     memset(snake_layer, 0, sizeof(snake_layer));
-
+    /*setup the boundy */
     for(int i = 0; i < SCREEN_HEIGHT; i++){
         wall_layer[i][0] = 1;
         wall_layer[i][SCREEN_WIDTH - 1] = 1;
@@ -38,6 +42,7 @@ int main() {
         wall_layer[0][i] = 1;
         wall_layer[SCREEN_HEIGHT - 1][i] = 1;
     }
+    /*setup the snake */
     struct snake s = {10, 10, NULL};
     s.next = &(struct snake){10, 9, NULL};
     s.next->next = NULL;
@@ -49,6 +54,7 @@ int main() {
         snake_layer[temp->y][temp->x] = 1;
         temp = temp->next;
     }
+    /*setup the food */
     food food;
     while(1){
         food.x = rand() % SCREEN_WIDTH;
@@ -59,6 +65,7 @@ int main() {
     }
     food_layer[food.y][food.x] = 1;
     int score = 0;
+    /*game loop */
     while(1){
         nanosleep(&ts, NULL);
         snake* end = ss.head;
