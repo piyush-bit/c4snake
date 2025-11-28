@@ -56,14 +56,18 @@ int main() {
     }
     /*setup the food */
     food food;
-    while(1){
-        food.x = rand() % SCREEN_WIDTH;
-        food.y = rand() % SCREEN_HEIGHT;
-        if(wall_layer[food.y][food.x] == 0 && snake_layer[food.y][food.x] == 0){
-            break;
+    for(int i =0; i<100; i++){    
+        while(1){
+            food.x = rand() % SCREEN_WIDTH;
+            food.y = rand() % SCREEN_HEIGHT;
+            if(wall_layer[food.y][food.x] == 0 && snake_layer[food.y][food.x] == 0 && food_layer[food.y][food.x] == 0){
+                break;
+            }
+            printf("food at %d %d for %d fails \n", food.x, food.y,i);
         }
+        food_layer[food.y][food.x] = 1;
     }
-    food_layer[food.y][food.x] = 1;
+
     int score = 0;
     /*game loop */
     while(1){
@@ -72,7 +76,7 @@ int main() {
         snake_layer[end->y][end->x]--;
         compute_snake(&ss, dir);
         snake* new_head = ss.end;
-        if(wall_layer[new_head->y][new_head->x] == 1 || snake_layer[new_head->y][new_head->x] > 0){
+        if(wall_layer[new_head->y][new_head->x] == 1){
             break;
         }
         snake_layer[new_head->y][new_head->x]++;
@@ -88,7 +92,7 @@ int main() {
             new_end->y = end->y;
             new_end->next = ss.head;
             ss.head = new_end;
-            while (wall_layer[food.y][food.x] == 1 || snake_layer[food.y][food.x] > 0) {
+            while (wall_layer[food.y][food.x] == 1 || snake_layer[food.y][food.x] > 0 || food_layer[food.y][food.x] == 1) {
                 food.x = rand() % SCREEN_WIDTH;
                 food.y = rand() % SCREEN_HEIGHT;
             }
