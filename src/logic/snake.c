@@ -1,7 +1,28 @@
 #include "snake.h"
+#include <stdlib.h>
 #include <stddef.h>
 
+void assign_random_dir(char* dir){
+    char valid_dir [] = {'w', 'a', 's', 'd'};
+    *dir = valid_dir[rand() % 4];
+}
+
 void compute_snake(snake_state* s, char new_dir) {
+    if (new_dir == 0 || new_dir == ' '){
+        assign_random_dir(&new_dir);
+    }
+
+    s->deleted->x=s->head->x;
+    s->deleted->y=s->head->y;
+
+    // if (s->end->next == NULL){
+    //     switch (new_dir) {
+    //         case 'w': s->end->y -= 1; break;
+    //         case 's': s->end->y += 1; break;
+    //         case 'a': s->end->x -= 1; break;
+    //         case 'd': s->end->x += 1; break;
+    //     }
+    // }
     // prevent reversing
     if ((new_dir == 'w' && s->dir == 's') ||
         (new_dir == 's' && s->dir == 'w') ||

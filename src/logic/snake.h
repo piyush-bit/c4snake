@@ -12,6 +12,7 @@ typedef struct snake {
 typedef struct {
     snake* head; // head is the snake's tail
     snake* end; // end is the snake's head
+    snake* deleted;
     char dir;
 } snake_state;
 

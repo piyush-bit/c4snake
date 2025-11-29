@@ -18,7 +18,34 @@ typedef struct{
     
 } gameState;
 
-struct timespec ts = {0, 0.5 * 100 * 1000 * 1000};
+struct timespec ts = {0, SPEED_MULTIPLIER * 100 * 1000 * 1000};
+
+int updateSnakeLayer(snake_state* ss , char snake_layer[SCREEN_HEIGHT][SCREEN_WIDTH], char food_layer[SCREEN_HEIGHT][SCREEN_WIDTH], char wall_layer[SCREEN_HEIGHT][SCREEN_WIDTH], int dir){
+    snake_layer[ss->deleted->y][ss->deleted->x]--;
+    compute_snake(ss, dir);
+    snake* new_head = ss->end;
+    if(wall_layer[new_head->y][new_head->x] == 1){
+        return -1;
+    }
+    snake_layer[new_head->y][new_head->x]++;
+    if(food_layer[new_head->y][new_head->x] > 0){
+        food_layer[new_head->y][new_head->x] = 0;
+        snake_layer[ss->deleted->y][ss->deleted->x]++;
+        snake* new_end = (snake*)malloc(sizeof(snake));
+        new_end->x = ss->deleted->x;
+        new_end->y = ss->deleted->y;
+        new_end->next = ss->head;
+        ss->head = new_end;
+        food food;
+        do{
+            food.x = rand() % SCREEN_WIDTH;
+            food.y = rand() % SCREEN_HEIGHT;
+        }while (wall_layer[food.y][food.x] == 1 || snake_layer[food.y][food.x] > 0 || food_layer[food.y][food.x] == 1); 
+        food_layer[food.y][food.x] = 1;
+        return 1;
+    }
+    return 0;
+}
 
 int main() {
     enableRawMode();
@@ -46,8 +73,9 @@ int main() {
     struct snake s = {10, 10, NULL};
     s.next = &(struct snake){10, 9, NULL};
     s.next->next = NULL;
+    snake deleted = {-1,-1,NULL};
 
-    snake_state ss = {&s,s.next,'w'};
+    snake_state ss = {&s,s.next,&deleted,'w'};
 
     snake* temp = ss.head;
     while(temp){
@@ -56,14 +84,13 @@ int main() {
     }
     /*setup the food */
     food food;
-    for(int i =0; i<100; i++){    
+    for(int i =0; i<50; i++){    
         while(1){
             food.x = rand() % SCREEN_WIDTH;
             food.y = rand() % SCREEN_HEIGHT;
             if(wall_layer[food.y][food.x] == 0 && snake_layer[food.y][food.x] == 0 && food_layer[food.y][food.x] == 0){
                 break;
             }
-            printf("food at %d %d for %d fails \n", food.x, food.y,i);
         }
         food_layer[food.y][food.x] = 1;
     }
@@ -72,32 +99,17 @@ int main() {
     /*game loop */
     while(1){
         nanosleep(&ts, NULL);
-        snake* end = ss.head;
-        snake_layer[end->y][end->x]--;
-        compute_snake(&ss, dir);
-        snake* new_head = ss.end;
-        if(wall_layer[new_head->y][new_head->x] == 1){
+        int res = updateSnakeLayer(&ss, snake_layer, food_layer, wall_layer, dir);
+        if(res == -1){
             break;
         }
-        snake_layer[new_head->y][new_head->x]++;
+        if(res == 1){
+            score++;
+        }
+        snake* new_head = ss.end;
         char screen[SCREEN_HEIGHT][SCREEN_WIDTH];
         compose_layers(SCREEN_HEIGHT, SCREEN_WIDTH, screen, wall_layer, food_layer, snake_layer);
         get_pov(screen, pov, new_head->x, new_head->y);
-        if(food_layer[new_head->y][new_head->x] > 0){
-            score++;
-            food_layer[new_head->y][new_head->x] = 0;
-            snake_layer[end->y][end->x]++;
-            snake* new_end = (snake*)malloc(sizeof(snake));
-            new_end->x = end->x;
-            new_end->y = end->y;
-            new_end->next = ss.head;
-            ss.head = new_end;
-            while (wall_layer[food.y][food.x] == 1 || snake_layer[food.y][food.x] > 0 || food_layer[food.y][food.x] == 1) {
-                food.x = rand() % SCREEN_WIDTH;
-                food.y = rand() % SCREEN_HEIGHT;
-            }
-            food_layer[food.y][food.x] = 1;
-        }
         
         render(POV_HEIGHT, POV_WIDTH, pov);
     }

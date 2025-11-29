@@ -4,7 +4,8 @@
 
 char dir = 'd';
 
-void *loop() {
+void *loop(void* args) {
+    (void)args;
     char c;
 
     while (1) {

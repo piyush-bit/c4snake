@@ -33,8 +33,8 @@ void compose_layers(size_t rows, size_t cols, char screen[rows][cols], char wall
 
 void render(size_t rows, size_t cols, char screen[rows][cols]) {
     printf("%s", RESET_CURSOR);
-    printf("%s", CLEAR);
-    printf("%s", RESET_CURSOR);
+    // printf("%s", CLEAR);
+    // printf("%s", RESET_CURSOR);
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < cols; j++) {
             switch(screen[i][j]) {

@@ -6,4 +6,7 @@
 #define POV_WIDTH 70
 #define POV_HEIGHT 30
 
+#define SPEED_MULTIPLIER 0.5
+#define BOTCOUNT 2
+
 #endif // CONFIG_H

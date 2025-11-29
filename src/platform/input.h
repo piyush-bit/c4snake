@@ -3,6 +3,6 @@
 
 extern char dir;
 
-void *loop();
+void *loop(void* args);
 
 #endif // INPUT_H
