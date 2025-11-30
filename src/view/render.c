@@ -50,6 +50,9 @@ void render(size_t rows, size_t cols, char screen[rows][cols]) {
                 case 2:
                     printf("%s%s", FILL75,FILL75);
                     break;
+                case -2:
+                    printf("%s%s", FILL0,FILL0);
+                    break;
             }
         }
         printf("\n");

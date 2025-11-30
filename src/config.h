@@ -1,8 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define SCREEN_WIDTH 350
-#define SCREEN_HEIGHT 150
+#define SCREEN_WIDTH 35
+#define SCREEN_HEIGHT 15
 #define POV_WIDTH 70
 #define POV_HEIGHT 30
 

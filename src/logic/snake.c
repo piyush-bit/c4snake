@@ -15,14 +15,16 @@ void compute_snake(snake_state* s, char new_dir) {
     s->deleted->x=s->head->x;
     s->deleted->y=s->head->y;
 
-    // if (s->end->next == NULL){
-    //     switch (new_dir) {
-    //         case 'w': s->end->y -= 1; break;
-    //         case 's': s->end->y += 1; break;
-    //         case 'a': s->end->x -= 1; break;
-    //         case 'd': s->end->x += 1; break;
-    //     }
-    // }
+    if (s->head->next == NULL){
+        switch (new_dir) {
+            case 'w': s->end->y -= 1; break;
+            case 's': s->end->y += 1; break;
+            case 'a': s->end->x -= 1; break;
+            case 'd': s->end->x += 1; break;
+        }
+        s->dir = new_dir;
+        return;
+    }
     // prevent reversing
     if ((new_dir == 'w' && s->dir == 's') ||
         (new_dir == 's' && s->dir == 'w') ||

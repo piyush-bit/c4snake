@@ -21,7 +21,6 @@ typedef struct{
 struct timespec ts = {0, SPEED_MULTIPLIER * 100 * 1000 * 1000};
 
 int updateSnakeLayer(snake_state* ss , char snake_layer[SCREEN_HEIGHT][SCREEN_WIDTH], char food_layer[SCREEN_HEIGHT][SCREEN_WIDTH], char wall_layer[SCREEN_HEIGHT][SCREEN_WIDTH], int dir){
-    snake_layer[ss->deleted->y][ss->deleted->x]--;
     compute_snake(ss, dir);
     snake* new_head = ss->end;
     if(wall_layer[new_head->y][new_head->x] == 1){
@@ -30,7 +29,7 @@ int updateSnakeLayer(snake_state* ss , char snake_layer[SCREEN_HEIGHT][SCREEN_WI
     snake_layer[new_head->y][new_head->x]++;
     if(food_layer[new_head->y][new_head->x] > 0){
         food_layer[new_head->y][new_head->x] = 0;
-        snake_layer[ss->deleted->y][ss->deleted->x]++;
+        ss->length++;
         snake* new_end = (snake*)malloc(sizeof(snake));
         new_end->x = ss->deleted->x;
         new_end->y = ss->deleted->y;
@@ -44,6 +43,7 @@ int updateSnakeLayer(snake_state* ss , char snake_layer[SCREEN_HEIGHT][SCREEN_WI
         food_layer[food.y][food.x] = 1;
         return 1;
     }
+    snake_layer[ss->deleted->y][ss->deleted->x]--;
     return 0;
 }
 
@@ -55,11 +55,13 @@ int main() {
     char wall_layer[SCREEN_HEIGHT][SCREEN_WIDTH];
     char food_layer[SCREEN_HEIGHT][SCREEN_WIDTH];
     char snake_layer[SCREEN_HEIGHT][SCREEN_WIDTH];
+    char snake_layer2[SCREEN_HEIGHT][SCREEN_WIDTH];
 
     memset(pov, -1, sizeof(pov));
     memset(wall_layer, 0, sizeof(wall_layer));
     memset(food_layer, 0, sizeof(food_layer));
     memset(snake_layer, 0, sizeof(snake_layer));
+    memset(snake_layer2, 0, sizeof(snake_layer2));
     /*setup the boundy */
     for(int i = 0; i < SCREEN_HEIGHT; i++){
         wall_layer[i][0] = 1;
@@ -71,17 +73,25 @@ int main() {
     }
     /*setup the snake */
     struct snake s = {10, 10, NULL};
-    s.next = &(struct snake){10, 9, NULL};
-    s.next->next = NULL;
     snake deleted = {-1,-1,NULL};
 
-    snake_state ss = {&s,s.next,&deleted,'w'};
+    struct snake s2 = {20, 10, NULL};
+    snake deleted2 = {-1,-1,NULL};
+    snake_state ss = {&s,&s,&deleted,1,'w'};
+    snake_state ss2 = {&s2,&s2,&deleted2,1,'w'};
 
     snake* temp = ss.head;
     while(temp){
         snake_layer[temp->y][temp->x] = 1;
         temp = temp->next;
     }
+
+    snake* temp2 = ss2.head;
+    while(temp2){
+        snake_layer2[temp2->y][temp2->x] = 1;
+        temp2 = temp2->next;
+    }
+    
     /*setup the food */
     food food;
     for(int i =0; i<50; i++){    
@@ -107,6 +117,7 @@ int main() {
             score++;
         }
         snake* new_head = ss.end;
+        updateSnakeLayer(&ss2, snake_layer2, food_layer, wall_layer, 0);
         char screen[SCREEN_HEIGHT][SCREEN_WIDTH];
         compose_layers(SCREEN_HEIGHT, SCREEN_WIDTH, screen, wall_layer, food_layer, snake_layer);
         get_pov(screen, pov, new_head->x, new_head->y);
