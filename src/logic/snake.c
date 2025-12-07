@@ -1,11 +1,39 @@
 #include "snake.h"
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 void assign_random_dir(char* dir){
     char valid_dir [] = {'w', 'a', 's', 'd'};
     *dir = valid_dir[rand() % 4];
 }
+char* getcoordinatesPointer(snake_state* s , int x ,int y){
+    return s->snakeLayer+(y*s->w+x);
+}
+
+snake_state* initSnakeState(int h, int w , int x , int y){
+    snake* head = (snake*)malloc(sizeof(snake));
+    snake* del = (snake*)malloc(sizeof(snake));
+    head->x = x;
+    head->y = y;
+    head->next = NULL;
+    snake_state* s = (snake_state*)malloc(sizeof(snake_state));
+    s->head = head;
+    s->end = head;
+    s->deleted = del;
+    s->h = h;
+    s->w = w;
+    s->snakeLayer = (char*)malloc(sizeof(char)*h*w);
+    memset(s->snakeLayer, 0, h*w);
+    s->length = 1;
+    *getcoordinatesPointer(s, x, y) = 1;
+    s->dir = 'a';
+    s->shared_dir = (char*)malloc(sizeof(char));
+    *s->shared_dir = 'a';
+    s->isActive = 1;
+    return s;
+}
+
 
 void compute_snake(snake_state* s, char new_dir) {
     if (new_dir == 0 || new_dir == ' '){

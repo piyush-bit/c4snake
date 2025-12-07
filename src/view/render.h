@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include "../config.h"
+#include "../logic/snake.h"
 
 extern const char *FILL100;
 extern const char *FILL75;
@@ -15,6 +16,6 @@ extern const char *RESET_CURSOR;
 
 void render(size_t rows, size_t cols, char screen[rows][cols]);
 void get_pov(char screen[SCREEN_HEIGHT][SCREEN_WIDTH], char pov[POV_HEIGHT][POV_WIDTH], int x, int y);
-void compose_layers(size_t rows, size_t cols, char screen[rows][cols], char wall_layer[rows][cols], char food_layer[rows][cols], char snake_layer[rows][cols]);
+void compose_layers(size_t rows, size_t cols, char screen[rows][cols], char wall_layer[rows][cols], char food_layer[rows][cols], snake_state* states[]);
 
 #endif // RENDER_H

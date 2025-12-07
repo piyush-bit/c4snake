@@ -11,20 +11,26 @@ const char *FILL0 =  " ";
 const char *CLEAR = "\033[2J";
 const char *RESET_CURSOR = "\033[H";
 
-void compose_layers(size_t rows, size_t cols, char screen[rows][cols], char wall_layer[rows][cols], char food_layer[rows][cols], char snake_layer[rows][cols]){
-    for(size_t i = 0; i < rows; i++){
-        for(size_t j = 0; j < cols; j++){
-            if (wall_layer[i][j] > 0) {
-                screen[i][j] = 1;
-            } else if (food_layer[i][j] > 0) {
-                screen[i][j] = 2;
-            } else if (snake_layer[i][j] > 0) {
-                screen[i][j] = 1;
+void compose_layers(size_t rows, size_t cols, char screen[rows][cols], char wall_layer[rows][cols], char food_layer[rows][cols], snake_state* states[]){
+    for(size_t y = 0; y < rows; y++){
+        for(size_t x = 0; x < cols; x++){
+            if (wall_layer[y][x] > 0) {
+                screen[y][x] = 1;
+            } else if (food_layer[y][x] > 0) {
+                screen[y][x] = 2;
             } else {
-                if ( ((i / 4) + (j / 4)) % 2 == 0 ) {
-                    screen[i][j] = 0;
+                if ( ((y / 4) + (x / 4)) % 2 == 0 ) {
+                    screen[y][x] = 0;
                 } else {
-                    screen[i][j] = -1;
+                    screen[y][x] = -1;
+                }
+            }
+            for(int k = 0; k < BOTCOUNT+1; k++){
+                if(states[k]->isActive == 0){
+                    continue;
+                }
+                if(*getcoordinatesPointer(states[k], x, y)>0){
+                    screen[y][x] = 1;
                 }
             }
         }
