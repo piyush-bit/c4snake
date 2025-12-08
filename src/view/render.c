@@ -16,9 +16,11 @@ void compose_layers(size_t rows, size_t cols, char screen[rows][cols], char wall
         for(size_t x = 0; x < cols; x++){
             if (wall_layer[y][x] > 0) {
                 screen[y][x] = 1;
-            } else if (food_layer[y][x] > 0) {
+            } else if (food_layer[y][x] == 1) {
                 screen[y][x] = 2;
-            } else {
+            }else if (food_layer[y][x] > 1){
+                food_layer[y][x] = 0;
+            }else {
                 if ( ((y / 4) + (x / 4)) % 2 == 0 ) {
                     screen[y][x] = 0;
                 } else {

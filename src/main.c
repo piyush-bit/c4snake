@@ -38,7 +38,7 @@ int updateSnakeLayer(snake_state* ss , char food_layer[SCREEN_HEIGHT][SCREEN_WID
     }
     (*getcoordinatesPointer(ss, new_head->x, new_head->y))++;
     if(food_layer[new_head->y][new_head->x] > 0){
-        food_layer[new_head->y][new_head->x] = 0;
+        food_layer[new_head->y][new_head->x] ++;
         ss->length++;
         snake* new_end = (snake*)malloc(sizeof(snake));
         new_end->x = ss->deleted->x;
@@ -129,16 +129,46 @@ int main() {
                 foodEaten++;
             }
         }
+        //TODO: detect collision with other snakes
+        snake* new_snake_head = states[0]->end;
+        int iscolliding = 0;
+        for(int i =1 ; i<=BOTCOUNT; i++){
+            if(*(getcoordinatesPointer(states[i], new_snake_head->x, new_snake_head->y))>0){
+                iscolliding = 1;
+                break;
+            }
+        }
+
+        if(iscolliding) {
+            break;
+        }
+
+        for(int i = 1 ; i<=BOTCOUNT ; i++){
+            int iscolliding = 0;
+            snake* new_snake_head = states[i]->end;
+            for(int j = 0 ; j <= BOTCOUNT ; j++){
+                if(i != j){
+                    if(*(getcoordinatesPointer(states[j], new_snake_head->x, new_snake_head->y))>0){
+                        iscolliding = 1;
+                        break;
+                    }
+                }
+            }
+            if(iscolliding){
+                states[i]->isActive = 0;
+            }
+        }
+
         snake* new_head = states[0]->end;
         compose_layers(SCREEN_HEIGHT, SCREEN_WIDTH, screen, wall_layer, food_layer, states);
         get_pov(screen, pov, new_head->x, new_head->y);
         render(POV_HEIGHT, POV_WIDTH, pov);
-        // TODO add food 
+        //add food 
         for(int j = 0 ; j < foodEaten ; j++){
             while(1){
             food.x = rand() % SCREEN_WIDTH;
             food.y = rand() % SCREEN_HEIGHT;
-            if(screen[food.y][food.x] == 0){
+            if(screen[food.y][food.x] != 0){
                 break;
             }
         }
