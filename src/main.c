@@ -3,6 +3,7 @@
 #include "logic/snake.h"
 #include "platform/input.h"
 #include "platform/terminal.h"
+#include "utils/d_array.h"
 #include "view/render.h"
 #include <limits.h>
 #include <pthread.h>
@@ -31,17 +32,16 @@ void clearSnakeLayer(snake_state *ss,
   }
 }
 
-int updateSnakeLayer(snake_state *ss,
-                     char food_layer[SCREEN_HEIGHT][SCREEN_WIDTH],
-                     char wall_layer[SCREEN_HEIGHT][SCREEN_WIDTH], int dir) {
+int updateSnakeLayer(snake_state *ss, DArray *food_layer, DArray *wall_layer,
+                     int dir) {
   compute_snake(ss, dir);
   snake *new_head = ss->end;
-  if (wall_layer[new_head->y][new_head->x] == 1) {
+  if (*(d_array_get(wall_layer, new_head->x, new_head->y)) == 1) {
     return -1;
   }
   (*getcoordinatesPointer(ss, new_head->x, new_head->y))++;
-  if (food_layer[new_head->y][new_head->x] > 0) {
-    food_layer[new_head->y][new_head->x]++;
+  if (*d_array_get(food_layer, new_head->x, new_head->y) > 0) {
+    (*d_array_get(food_layer, new_head->x, new_head->y))++;
     ss->length++;
     snake *new_end = (snake *)malloc(sizeof(snake));
     new_end->x = ss->deleted->x;
@@ -54,26 +54,27 @@ int updateSnakeLayer(snake_state *ss,
   return 0;
 }
 
-char screen[SCREEN_HEIGHT][SCREEN_WIDTH];
+
 int main() {
+  srand(time(NULL));
   enableRawMode();
   pthread_t t;
   pthread_create(&t, NULL, loop, NULL);
-  char pov[POV_HEIGHT][POV_WIDTH];
-  char wall_layer[SCREEN_HEIGHT][SCREEN_WIDTH];
-  char food_layer[SCREEN_HEIGHT][SCREEN_WIDTH];
 
-  memset(pov, -1, sizeof(pov));
-  memset(wall_layer, 0, sizeof(wall_layer));
-  memset(food_layer, 0, sizeof(food_layer));
+  DArray *pov = d_array_create(POV_HEIGHT, POV_WIDTH, -1);
+  DArray *wall_layer = d_array_create(SCREEN_HEIGHT, SCREEN_WIDTH, 0);
+  DArray *food_layer = d_array_create(SCREEN_HEIGHT, SCREEN_WIDTH, 0);
+
+  DArray *screen = d_array_create(SCREEN_HEIGHT, SCREEN_WIDTH, 0);
+
   /*setup the boundy */
   for (int i = 0; i < SCREEN_HEIGHT; i++) {
-    wall_layer[i][0] = 1;
-    wall_layer[i][SCREEN_WIDTH - 1] = 1;
+    *(d_array_get(wall_layer, 0, i)) = 1;
+    *(d_array_get(wall_layer, SCREEN_WIDTH - 1, i)) = 1;
   }
   for (int i = 0; i < SCREEN_WIDTH; i++) {
-    wall_layer[0][i] = 1;
-    wall_layer[SCREEN_HEIGHT - 1][i] = 1;
+    *(d_array_get(wall_layer, i, 0)) = 1;
+    *(d_array_get(wall_layer, i, SCREEN_HEIGHT - 1)) = 1;
   }
 
   /*setup the food */
@@ -82,25 +83,29 @@ int main() {
     while (1) {
       food.x = rand() % SCREEN_WIDTH;
       food.y = rand() % SCREEN_HEIGHT;
-      if (wall_layer[food.y][food.x] == 0 && food_layer[food.y][food.x] == 0) {
+      if ((*d_array_get(wall_layer, food.x, food.y) == 0) &&
+          (*d_array_get(food_layer, food.x, food.y)) == 0) {
         break;
       }
     }
-    food_layer[food.y][food.x] = 1;
+    *(d_array_get(food_layer, food.x, food.y)) = 1;
   }
 
   /*setup the snake */
 
-  snake_state **states = (snake_state **)malloc(sizeof(snake_state *) * (BOTCOUNT + 1));
+  snake_state **states =
+      (snake_state **)malloc(sizeof(snake_state *) * (BOTCOUNT + 1));
   for (int i = 0; i <= BOTCOUNT; i++) {
     int x = rand() % SCREEN_WIDTH;
     int y = rand() % SCREEN_HEIGHT;
-    while (screen[y][x] != 0 && (x <= 20 || x >= SCREEN_WIDTH - 20 || y <= 20 || y >= SCREEN_HEIGHT - 20)) {
+    while ((*d_array_get(screen, x, y))
+         && (x <= 20 || x >= SCREEN_WIDTH - 20 || y <= 20 ||
+                                 y >= SCREEN_HEIGHT - 20)) {
       x = rand() % SCREEN_WIDTH;
       y = rand() % SCREEN_HEIGHT;
     }
     snake_state *s = initSnakeState(SCREEN_HEIGHT, SCREEN_WIDTH, x, y);
-    screen[s->head->y][s->head->x] = 1;
+    (*d_array_get(screen, s->head->x, s->head->y)) = 1;
     states[i] = s;
   }
 
@@ -150,7 +155,7 @@ int main() {
     }
 
     if (iscolliding) {
-    break;
+      break;
     }
 
     for (int i = 1; i <= BOTCOUNT; i++) {
@@ -174,20 +179,20 @@ int main() {
     }
 
     snake *new_head = states[0]->end;
-    compose_layers(SCREEN_HEIGHT, SCREEN_WIDTH, screen, wall_layer, food_layer,
+    compose_layers(screen, wall_layer, food_layer,
                    states);
     get_pov(screen, pov, new_head->x, new_head->y);
-    render(POV_HEIGHT, POV_WIDTH, pov);
+    render(pov);
     // add food
     for (int j = 0; j < foodEaten; j++) {
       while (1) {
         food.x = rand() % SCREEN_WIDTH;
         food.y = rand() % SCREEN_HEIGHT;
-        if (screen[food.y][food.x] == 0) {
+        if ((*d_array_get(screen, food.x, food.y)) == 0) {
           break;
         }
       }
-      food_layer[food.y][food.x] = 1;
+      *(d_array_get(food_layer, food.x, food.y)) = 1;
     }
   }
   printf("Game Over :%d\n", score);

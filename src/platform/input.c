@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-char dir = 'd';
+char dir = 'a';
 
 void *loop(void* args) {
     (void)args;

@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -pthread
 LDFLAGS = -pthread
 
-SRCS = src/main.c src/logic/snake.c src/platform/input.c src/platform/terminal.c src/view/render.c src/logic/bot.c
+SRCS = src/main.c src/logic/snake.c src/platform/input.c src/platform/terminal.c src/view/render.c src/logic/bot.c src/utils/d_array.c
 OBJS = $(SRCS:.c=.o)
 
 DEPS = src/config.h
