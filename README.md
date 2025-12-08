@@ -3,10 +3,8 @@
 A high-performance, terminal-based snake game written in **raw C** with zero dependencies. Built with clean architecture principles, dependency injection, and the adapter pattern to support multiple input sources and rendering backends.
 
 
-
-https://github.com/user-attachments/assets/35a12842-1896-40b9-aa8c-b758f1086fe3
-
-
+## Preview
+https://github.com/user-attachments/assets/f95e3a60-eb6b-4c5b-bdad-1a115d532b7c
 
 
 
