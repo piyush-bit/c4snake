@@ -147,6 +147,9 @@ int main() {
     snake *new_snake_head = states[0]->end;
     int iscolliding = 0;
     for (int i = 1; i <= BOTCOUNT; i++) {
+      if (states[i]->isActive == 0) {
+        continue;
+      }
       if (*(getcoordinatesPointer(states[i], new_snake_head->x,
                                   new_snake_head->y)) > 0) {
         iscolliding = 1;
@@ -165,6 +168,8 @@ int main() {
       int iscolliding = 0;
       snake *new_snake_head = states[i]->end;
       for (int j = 0; j <= BOTCOUNT; j++) {
+        if(states[j]->isActive==0)
+            continue;
         if (i != j) {
           if (*(getcoordinatesPointer(states[j], new_snake_head->x,
                                       new_snake_head->y)) > 0) {
