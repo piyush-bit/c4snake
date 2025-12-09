@@ -57,7 +57,7 @@ int updateSnakeLayer(snake_state *ss, DArray *food_layer, DArray *wall_layer,
 
 int main() {
   srand(time(NULL));
-  enableRawMode();
+  initTerminal();
   pthread_t t;
   pthread_create(&t, NULL, loop, NULL);
 
@@ -118,7 +118,7 @@ int main() {
   while (1) {
     nanosleep(&ts, NULL);
     int foodEaten = 0;
-    // char dir = decideMove(states[0], screen);
+    char dir = decideMove(states[0], screen);
 
     if (states[0]->isActive) {
       int res = updateSnakeLayer(states[0], food_layer, wall_layer, dir);

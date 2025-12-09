@@ -1,4 +1,5 @@
 #include "render.h"
+#include "../platform/terminal.h"
 #include "../utils/d_array.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -12,9 +13,7 @@ const char *FILL0 = " ";
 const char *CLEAR = "\033[2J";
 const char *RESET_CURSOR = "\033[H";
 
-void compose_layers(DArray* screen,
-                    DArray *wall_layer, DArray *food_layer,
-                    snake_state *states[]) {
+void compose_layers(DArray* screen, DArray *wall_layer, DArray *food_layer, snake_state *states[]) {
   size_t rows = screen->row;
   size_t cols = screen->col;
   for (size_t y = 0; y < rows; y++) {
@@ -76,8 +75,7 @@ void render(DArray *screen) {
   }
 }
 
-void get_pov(DArray* screen, DArray *pov, int x,
-             int y) {
+void get_pov(DArray* screen, DArray *pov, int x, int y) {
   int x_offset = x - POV_WIDTH / 2;
   int y_offset = y - POV_HEIGHT / 2;
 
