@@ -1,0 +1,8 @@
+#ifndef STATES_H
+#define STATES_H
+enum GAMESTATE {
+  START_SCREEN,
+  GAME_SCREEN,
+  EXIT_SCREEN,
+};
+#endif

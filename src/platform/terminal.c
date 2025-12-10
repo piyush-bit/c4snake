@@ -31,7 +31,7 @@ void updatePOVSize() {
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
-    POV_WIDTH = w.ws_col/2;
+    POV_WIDTH = w.ws_col;
     POV_HEIGHT = w.ws_row-2;
 }
 
