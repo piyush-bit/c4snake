@@ -55,7 +55,7 @@ int game_screen() {
   pthread_t t;
   pthread_create(&t, NULL, loop, NULL);
 
-  DArray *pov = d_array_create(POV_HEIGHT, POV_WIDTH, -1);
+  DArray *pov = d_array_create(POV_HEIGHT, POV_WIDTH/2, -1);
   DArray *wall_layer = d_array_create(SCREEN_HEIGHT, SCREEN_WIDTH, 0);
   DArray *food_layer = d_array_create(SCREEN_HEIGHT, SCREEN_WIDTH, 0);
 
@@ -181,7 +181,7 @@ int game_screen() {
     compose_layers(screen, wall_layer, food_layer,
                    states);
     get_pov(screen, pov, new_head->x, new_head->y);
-    render(pov);
+    render2(pov);
     // add food
     for (int j = 0; j < foodEaten; j++) {
       while (1) {

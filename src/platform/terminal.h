@@ -10,6 +10,7 @@ extern int POV_HEIGHT;
 void disableRawMode();
 void enableRawMode();
 
+void updatePOVSize();
 void initTerminal();
 
 #endif // TERMINAL_H
