@@ -1,7 +1,5 @@
 #ifndef RENDER_H
 #define RENDER_H
-
-#include "../config.h"
 #include "../logic/snake.h"
 #include "../utils/d_array.h"
 #include <stddef.h>

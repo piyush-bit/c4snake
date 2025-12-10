@@ -1,6 +1,7 @@
 #include "render.h"
 #include "../platform/terminal.h"
 #include "../utils/d_array.h"
+#include "../view/states.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,21 +34,30 @@ void compose_layers(DArray *screen, DArray *wall_layer, DArray *food_layer,
           (*d_array_get(screen, x, y)) = -1;
         }
       }
-      for (int k = 0; k < BOTCOUNT + 1; k++) {
-        if (states[k]->isActive == 0) {
-          continue;
-        }
-        if (*getcoordinatesPointer(states[k], x, y) > 0) {
-          (*d_array_get(screen, x, y)) = 1;
-        }
-      }
+      // for (int k = 0; k < BOTCOUNT + 1; k++) {
+      //   if (states[k]->isActive == 0) {
+      //     continue;
+      //   }
+      //   if (*getcoordinatesPointer(states[k], x, y) > 0) {
+      //     (*d_array_get(screen, x, y)) = 1;
+      //   }
+      // }
+    }
+  }
+  for(int i =0;i<GAMESTATE.botcount+1;i++){
+    if(states[i]->isActive==0)
+        continue;
+    snake *temp = states[i]->head;
+    while(temp){
+        (*d_array_get(screen, temp->x, temp->y)) = 1;
+        temp = temp->next;
     }
   }
 }
 
 void render(DArray *screen) {
-  printf("%s", RESET_CURSOR);
-  printf("%s", CLEAR);
+  // printf("%s", RESET_CURSOR);
+  // printf("%s", CLEAR);
   printf("%s", RESET_CURSOR);
   size_t rows = screen->row;
   size_t cols = screen->col;
@@ -122,8 +132,8 @@ void get_pov(DArray *screen, DArray *pov, int x, int y) {
       int world_row = i + y_offset;
       int world_col = j + x_offset;
 
-      if (world_row < 0 || world_row >= SCREEN_HEIGHT || world_col < 0 ||
-          world_col >= SCREEN_WIDTH) {
+      if (world_row < 0 || world_row >= GAMESTATE.map_height || world_col < 0 ||
+          world_col >= GAMESTATE.map_width) {
         (*d_array_get(pov, j, i)) = -1;
       } else {
         (*d_array_get(pov, j, i)) =

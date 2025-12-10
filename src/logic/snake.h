@@ -2,7 +2,6 @@
 #define SNAKE_H
 
 #include <stddef.h>
-#include "../config.h"
 
 typedef struct snake {
     int x;

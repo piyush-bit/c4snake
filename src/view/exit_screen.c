@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int exit_screen() {
+int exit_screen(struct GameOptions* state) {
   printf("Goodbye!\n");
   exit(0);
   return EXIT_SCREEN; // Should not reach here

@@ -1,4 +1,4 @@
-#include "../config.h"
+#include "game_screen.h"
 #include "../logic/bot.h"
 #include "../logic/snake.h"
 #include "../platform/input.h"
@@ -18,15 +18,15 @@ typedef struct {
   int y;
 } food;
 
-struct timespec ts = {0, SPEED_MULTIPLIER * 100 * 1000 * 1000};
 
-void clearSnakeLayer(snake_state *ss, char snake_layer[SCREEN_HEIGHT][SCREEN_WIDTH]) {
-  snake *temp = ss->head;
-  while (temp) {
-    snake_layer[temp->y][temp->x] = 0;
-    temp = temp->next;
-  }
-}
+
+// void clearSnakeLayer(snake_state *ss, char snake_layer[SCREEN_HEIGHT][SCREEN_WIDTH]) {
+//   snake *temp = ss->head;
+//   while (temp) {
+//     snake_layer[temp->y][temp->x] = 0;
+//     temp = temp->next;
+//   }
+// }
 
 int updateSnakeLayer(snake_state *ss, DArray *food_layer, DArray *wall_layer,int dir) {
   compute_snake(ss, dir);
@@ -49,34 +49,36 @@ int updateSnakeLayer(snake_state *ss, DArray *food_layer, DArray *wall_layer,int
   return 0;
 }
 
-
-int game_screen() {
+int game_screen(struct GameOptions* state) {
+  long target_frame_ns =
+      (long)((1.0 / state->speed_multiplier) * 100.0 * 1000.0 * 1000.0);
+  struct timespec start_time, end_time, sleep_time;
   srand(time(NULL));
   pthread_t t;
   pthread_create(&t, NULL, loop, NULL);
 
-  DArray *pov = d_array_create(POV_HEIGHT, POV_WIDTH/2, -1);
-  DArray *wall_layer = d_array_create(SCREEN_HEIGHT, SCREEN_WIDTH, 0);
-  DArray *food_layer = d_array_create(SCREEN_HEIGHT, SCREEN_WIDTH, 0);
+  DArray *pov = d_array_create(POV_HEIGHT, POV_WIDTH / 2, -1);
+  DArray *wall_layer = d_array_create(state->map_height, state->map_width, 0);
+  DArray *food_layer = d_array_create(state->map_height, state->map_width, 0);
 
-  DArray *screen = d_array_create(SCREEN_HEIGHT, SCREEN_WIDTH, 0);
+  DArray *screen = d_array_create(state->map_height, state->map_width, 0);
 
   /*setup the boundy */
-  for (int i = 0; i < SCREEN_HEIGHT; i++) {
+  for (int i = 0; i < state->map_height; i++) {
     *(d_array_get(wall_layer, 0, i)) = 1;
-    *(d_array_get(wall_layer, SCREEN_WIDTH - 1, i)) = 1;
+    *(d_array_get(wall_layer, state->map_width - 1, i)) = 1;
   }
-  for (int i = 0; i < SCREEN_WIDTH; i++) {
+  for (int i = 0; i < state->map_width; i++) {
     *(d_array_get(wall_layer, i, 0)) = 1;
-    *(d_array_get(wall_layer, i, SCREEN_HEIGHT - 1)) = 1;
+    *(d_array_get(wall_layer, i, state->map_height - 1)) = 1;
   }
 
   /*setup the food */
   food food;
-  for (int i = 0; i < FOODCOUNT; i++) {
+  for (int i = 0; i < state->foodcount; i++) {
     while (1) {
-      food.x = rand() % SCREEN_WIDTH;
-      food.y = rand() % SCREEN_HEIGHT;
+      food.x = rand() % state->map_width;
+      food.y = rand() % state->map_height;
       if ((*d_array_get(wall_layer, food.x, food.y) == 0) &&
           (*d_array_get(food_layer, food.x, food.y)) == 0) {
         break;
@@ -88,17 +90,17 @@ int game_screen() {
   /*setup the snake */
 
   snake_state **states =
-      (snake_state **)malloc(sizeof(snake_state *) * (BOTCOUNT + 1));
-  for (int i = 0; i <= BOTCOUNT; i++) {
-    int x = rand() % SCREEN_WIDTH;
-    int y = rand() % SCREEN_HEIGHT;
-    while ((*d_array_get(screen, x, y))
-         && (x <= 20 || x >= SCREEN_WIDTH - 20 || y <= 20 ||
-                                 y >= SCREEN_HEIGHT - 20)) {
-      x = rand() % SCREEN_WIDTH;
-      y = rand() % SCREEN_HEIGHT;
+      (snake_state **)malloc(sizeof(snake_state *) * (state->botcount + 1));
+  for (int i = 0; i <= state->botcount; i++) {
+    int x = rand() % state->map_width;
+    int y = rand() % state->map_height;
+    while ((*d_array_get(screen, x, y)) &&
+           (x <= 20 || x >= state->map_width - 20 || y <= 20 ||
+            y >= state->map_height - 20)) {
+      x = rand() % state->map_width;
+      y = rand() % state->map_height;
     }
-    snake_state *s = initSnakeState(SCREEN_HEIGHT, SCREEN_WIDTH, x, y);
+    snake_state *s = initSnakeState(state->map_height, state->map_width, x, y);
     (*d_array_get(screen, s->head->x, s->head->y)) = 1;
     states[i] = s;
   }
@@ -110,9 +112,9 @@ int game_screen() {
 
   /*game loop */
   while (1) {
-    nanosleep(&ts, NULL);
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
     int foodEaten = 0;
-    // char dir = decideMove(states[0], screen);
+    char dir = decideMove(states[0], screen);
 
     if (states[0]->isActive) {
       int res = updateSnakeLayer(states[0], food_layer, wall_layer, dir);
@@ -124,11 +126,11 @@ int game_screen() {
         foodEaten++;
       }
     }
-    for (int i = 1; i <= BOTCOUNT; i++) {
+    for (int i = 1; i <= state->botcount; i++) {
       if (states[i]->isActive == 0) {
         continue;
       }
-      char dir = decideMove(states[i], screen);
+      // char dir = decideMove(states[i], screen);
       int res = updateSnakeLayer(states[i], food_layer, wall_layer, dir);
       if (res == -1) {
         states[i]->isActive = 0;
@@ -140,7 +142,7 @@ int game_screen() {
     // detect collision with other snakes
     snake *new_snake_head = states[0]->end;
     int iscolliding = 0;
-    for (int i = 1; i <= BOTCOUNT; i++) {
+    for (int i = 1; i <= state->botcount; i++) {
       if (states[i]->isActive == 0) {
         continue;
       }
@@ -155,15 +157,15 @@ int game_screen() {
       break;
     }
 
-    for (int i = 1; i <= BOTCOUNT; i++) {
+    for (int i = 1; i <= state->botcount; i++) {
       if (states[i]->isActive == 0) {
         continue;
       }
       int iscolliding = 0;
       snake *new_snake_head = states[i]->end;
-      for (int j = 0; j <= BOTCOUNT; j++) {
-        if(states[j]->isActive==0)
-            continue;
+      for (int j = 0; j <= state->botcount; j++) {
+        if (states[j]->isActive == 0)
+          continue;
         if (i != j) {
           if (*(getcoordinatesPointer(states[j], new_snake_head->x,
                                       new_snake_head->y)) > 0) {
@@ -177,23 +179,37 @@ int game_screen() {
       }
     }
 
-    snake *new_head = states[0]->end;
-    compose_layers(screen, wall_layer, food_layer,
-                   states);
-    get_pov(screen, pov, new_head->x, new_head->y);
-    render2(pov);
-    // add food
+    // add food logic
     for (int j = 0; j < foodEaten; j++) {
       while (1) {
-        food.x = rand() % SCREEN_WIDTH;
-        food.y = rand() % SCREEN_HEIGHT;
+        food.x = rand() % state->map_width;
+        food.y = rand() % state->map_height;
         if ((*d_array_get(screen, food.x, food.y)) == 0) {
           break;
         }
       }
       *(d_array_get(food_layer, food.x, food.y)) = 1;
     }
+
+    snake *new_head = states[0]->end;
+    compose_layers(screen, wall_layer, food_layer, states);
+    get_pov(screen, pov, new_head->x, new_head->y);
+
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    long elapsed_ns = (end_time.tv_sec - start_time.tv_sec) * 1000000000L +
+                      (end_time.tv_nsec - start_time.tv_nsec);
+    long sleep_ns = target_frame_ns - elapsed_ns;
+
+    if (sleep_ns > 0) {
+      sleep_time.tv_sec = sleep_ns / 1000000000L;
+      sleep_time.tv_nsec = sleep_ns % 1000000000L;
+      nanosleep(&sleep_time, NULL);
+    }
+
+    render2(pov);
+    printf("Score: %d\n", score);
+    // food logic moved
   }
-  printf("Game Over :%d\n", score);
+  // printf("Game Over :%d\n", score);
   return EXIT_SCREEN;
 }

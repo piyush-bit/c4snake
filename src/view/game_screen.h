@@ -1,6 +1,8 @@
 #ifndef GAME_SCREEN_H
 #define GAME_SCREEN_H
 
-int game_screen();
+#include "../view/states.h"
+
+int game_screen(struct GameOptions *state);
 
 #endif // GAME_SCREEN_H

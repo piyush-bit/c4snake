@@ -2,6 +2,7 @@
 #include "../utils/d_array.h"
 #include "../view/render.h"
 #include "../view/states.h"
+#include "start_screen.h"
 #include <limits.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -59,8 +60,12 @@ int exitGame(){
     return EXIT_SCREEN;
 }
 
+int advanceOptions(){
+    return ADVANCE_SCREEN;
+}
 
-int start_screen() {
+
+int start_screen(struct GameOptions* state) {
   srand(time(NULL));
 
   printf("%s", CLEAR);
@@ -81,10 +86,11 @@ int start_screen() {
 
   char* options[] = {
     "Start Game",
+    "Advance Options",
     "Quit"
   };
 
-  int (*option_funcs[])() = { startGame,exitGame };
+  int (*option_funcs[])() = { startGame,advanceOptions,exitGame };
 
   int selected_option = 0;
   while (1) {
