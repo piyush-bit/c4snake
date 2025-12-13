@@ -44,13 +44,52 @@ void compose_layers(DArray *screen, DArray *wall_layer, DArray *food_layer,
       // }
     }
   }
-  for(int i =0;i<GAMESTATE.botcount+1;i++){
-    if(states[i]->isActive==0)
-        continue;
+  for (int i = 0; i < GAMESTATE.botcount + 1; i++) {
+    if (states[i]->isActive == 0)
+      continue;
     snake *temp = states[i]->head;
-    while(temp){
-        (*d_array_get(screen, temp->x, temp->y)) = 1;
-        temp = temp->next;
+    while (temp) {
+      (*d_array_get(screen, temp->x, temp->y)) = 1;
+      temp = temp->next;
+    }
+  }
+}
+
+void compose_layers_in_pov(DArray *screen, DArray *wall_layer,
+                           DArray *food_layer, snake_state *states[], int idx) {
+  int starty, startx, endy, endx;
+  snake *new_head = states[idx]->end;
+  starty = new_head->y - POV_HEIGHT / 2;
+  starty = starty < 0 ? 0 : starty;
+  startx = new_head->x - POV_WIDTH / 2;
+  startx = startx < 0 ? 0 : startx;
+  endy = new_head->y + POV_HEIGHT / 2;
+  endy = endy > screen->row ? screen->row : endy;
+  endx = new_head->x + POV_WIDTH / 2;
+  endx = endx > screen->col ? screen->col : endx;
+  for (int y = starty; y < endy; y++) {
+    for (int x = startx; x < endx; x++) {
+      if (*d_array_get(wall_layer, x, y) > 0) {
+        (*d_array_get(screen, x, y)) = 1;
+      } else if (*d_array_get(food_layer, x, y) == 1) {
+        (*d_array_get(screen, x, y)) = 2;
+      } else if (*d_array_get(food_layer, x, y) > 1) {
+        (*d_array_get(food_layer, x, y)) = 0;
+      } else {
+        if (((y / 4) + (x / 4)) % 2 == 0) {
+          (*d_array_get(screen, x, y)) = 0;
+        } else {
+          (*d_array_get(screen, x, y)) = -1;
+        }
+      }
+      for (int k = 0; k < GAMESTATE.botcount + 1; k++) {
+        if (states[k]->isActive == 0) {
+          continue;
+        }
+        if (*getcoordinatesPointer(states[k], x, y) > 0) {
+          (*d_array_get(screen, x, y)) = 1;
+        }
+      }
     }
   }
 }
@@ -101,19 +140,19 @@ void render2(DArray *screen) {
       int value = *d_array_get(screen, j, i);
       switch (value) {
       case -1:
-        printf("%s%s", FILL50,FILL50);
+        printf("%s%s", FILL50, FILL50);
         break;
       case 0:
-        printf("%s%s", FILL25,FILL25);
+        printf("%s%s", FILL25, FILL25);
         break;
       case 1:
-        printf("%s%s", FILL100,FILL100);
+        printf("%s%s", FILL100, FILL100);
         break;
       case 2:
-        printf("%s%s", FILL75,FILL75);
+        printf("%s%s", FILL75, FILL75);
         break;
       case -2:
-        printf("%s%s", FILL0,FILL0);
+        printf("%s%s", FILL0, FILL0);
         break;
       default:
         printf("%c", (char)value);
@@ -128,7 +167,7 @@ void get_pov(DArray *screen, DArray *pov, int x, int y) {
   int y_offset = y - POV_HEIGHT / 2;
 
   for (int i = 0; i < POV_HEIGHT; i++) {
-    for (int j = 0; j < POV_WIDTH/2; j++) {
+    for (int j = 0; j < POV_WIDTH / 2; j++) {
       int world_row = i + y_offset;
       int world_col = j + x_offset;
 
@@ -142,4 +181,3 @@ void get_pov(DArray *screen, DArray *pov, int x, int y) {
     }
   }
 }
-

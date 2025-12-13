@@ -18,15 +18,21 @@ typedef struct {
   int y;
 } food;
 
+void bountrywallPattern(DArray *wall_layer){
+      /*setup the boundy */
+  for (int i = 0; i < wall_layer->row; i++) {
+    *(d_array_get(wall_layer, 0, i)) = 1;
+    *(d_array_get(wall_layer, wall_layer->col - 1, i)) = 1;
+  }
+  for (int i = 0; i < wall_layer->col; i++) {
+    *(d_array_get(wall_layer, i, 0)) = 1;
+    *(d_array_get(wall_layer, i, wall_layer->row - 1)) = 1;
+  }
+}
 
-
-// void clearSnakeLayer(snake_state *ss, char snake_layer[SCREEN_HEIGHT][SCREEN_WIDTH]) {
-//   snake *temp = ss->head;
-//   while (temp) {
-//     snake_layer[temp->y][temp->x] = 0;
-//     temp = temp->next;
-//   }
-// }
+void createWall(DArray *wall_layer, void (*pattern)(DArray*)){
+    pattern(wall_layer);
+}
 
 int updateSnakeLayer(snake_state *ss, DArray *food_layer, DArray *wall_layer,int dir) {
   compute_snake(ss, dir);
@@ -64,14 +70,7 @@ int game_screen(struct GameOptions* state) {
   DArray *screen = d_array_create(state->map_height, state->map_width, 0);
 
   /*setup the boundy */
-  for (int i = 0; i < state->map_height; i++) {
-    *(d_array_get(wall_layer, 0, i)) = 1;
-    *(d_array_get(wall_layer, state->map_width - 1, i)) = 1;
-  }
-  for (int i = 0; i < state->map_width; i++) {
-    *(d_array_get(wall_layer, i, 0)) = 1;
-    *(d_array_get(wall_layer, i, state->map_height - 1)) = 1;
-  }
+  createWall(wall_layer, bountrywallPattern);
 
   /*setup the food */
   food food;
@@ -130,7 +129,7 @@ int game_screen(struct GameOptions* state) {
       if (states[i]->isActive == 0) {
         continue;
       }
-      // char dir = decideMove(states[i], screen);
+      char dir = decideMove(states[i], screen);
       int res = updateSnakeLayer(states[i], food_layer, wall_layer, dir);
       if (res == -1) {
         states[i]->isActive = 0;
@@ -192,7 +191,7 @@ int game_screen(struct GameOptions* state) {
     }
 
     snake *new_head = states[0]->end;
-    compose_layers(screen, wall_layer, food_layer, states);
+    compose_layers_in_pov(screen, wall_layer, food_layer, states,0);
     get_pov(screen, pov, new_head->x, new_head->y);
 
     clock_gettime(CLOCK_MONOTONIC, &end_time);
@@ -200,7 +199,7 @@ int game_screen(struct GameOptions* state) {
                       (end_time.tv_nsec - start_time.tv_nsec);
     long sleep_ns = target_frame_ns - elapsed_ns;
 
-    if (sleep_ns > 0) {
+    if (sleep_ns > 0){
       sleep_time.tv_sec = sleep_ns / 1000000000L;
       sleep_time.tv_nsec = sleep_ns % 1000000000L;
       nanosleep(&sleep_time, NULL);
@@ -208,8 +207,6 @@ int game_screen(struct GameOptions* state) {
 
     render2(pov);
     printf("Score: %d\n", score);
-    // food logic moved
   }
-  // printf("Game Over :%d\n", score);
   return EXIT_SCREEN;
 }

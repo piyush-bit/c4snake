@@ -16,7 +16,6 @@ extern const char *RESET_CURSOR;
 void render(DArray *screen);
 void render2(DArray *screen);
 void get_pov(DArray *screen, DArray *pov, int x, int y);
-void compose_layers(DArray *screen, DArray *wall_layer, DArray *food_layer,
-                    snake_state *states[]);
-
+void compose_layers(DArray *screen, DArray *wall_layer, DArray *food_layer, snake_state *states[]);
+void compose_layers_in_pov(DArray *screen, DArray *wall_layer, DArray *food_layer, snake_state *states[], int idx);
 #endif // RENDER_H
