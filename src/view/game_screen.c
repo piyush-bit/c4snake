@@ -13,10 +13,11 @@
 #include <string.h>
 #include <time.h>
 
+
 typedef struct {
   int x;
   int y;
-} food;
+} cordinates;
 
 void bountrywallPattern(DArray *wall_layer){
       /*setup the boundy */
@@ -55,6 +56,62 @@ int updateSnakeLayer(snake_state *ss, DArray *food_layer, DArray *wall_layer,int
   return 0;
 }
 
+struct gameComponent {
+  DArray* wall_layer;
+  DArray* food_layer;
+  DArray* screen;
+  snake_state** player_snake;
+  size_t player_count;
+  size_t max_players;
+  // Add other game components as needed
+};
+
+
+void compose_layers_spawn(struct gameComponent* game) {
+  size_t rows = game->screen->row;
+  size_t cols = game->screen->col;
+  for (size_t y = 0; y < rows; y++) {
+    for (size_t x = 0; x < cols; x++) {
+      if (*d_array_get(game->wall_layer, x, y) > 0) {
+        (*d_array_get(game->screen, x, y)) = 1;
+      } else if (*d_array_get(game->food_layer, x, y) == 1) {
+        (*d_array_get(game->screen, x, y)) = 2;
+      } else if (*d_array_get(game->food_layer, x, y) > 1) {
+        (*d_array_get(game->food_layer, x, y)) = 0;
+      } else {
+        if (((y / 4) + (x / 4)) % 2 == 0) {
+          (*d_array_get(game->screen, x, y)) = 0;
+        } else {
+          (*d_array_get(game->screen, x, y)) = -1;
+        }
+      }
+    }
+  }
+  for (int i = 0; i < game->player_count; i++) {
+    if (game->player_snake[i]->isActive == 0)
+      continue;
+    snake *temp = game->player_snake[i]->head;
+    while (temp) {
+      (*d_array_get(game->screen, temp->x, temp->y)) = 1;
+      temp = temp->next;
+    }
+  }
+}
+
+cordinates findEmptyCellToSpawn(struct gameComponent* game) {
+  // Implementation to find an empty cell for spawning food
+  cordinates empty;
+  compose_layers_spawn(game);
+  while(1){
+    empty.x = rand() % game->screen->col;
+    empty.y = rand() % game->screen->row;
+    if (*(d_array_get(game->screen, empty.x, empty.y)) == 0) {
+      break;
+    }
+  }
+  return empty;
+}
+
 int game_screen(struct GameOptions* state) {
   long target_frame_ns =
       (long)((1.0 / state->speed_multiplier) * 100.0 * 1000.0 * 1000.0);
@@ -69,39 +126,38 @@ int game_screen(struct GameOptions* state) {
 
   DArray *screen = d_array_create(state->map_height, state->map_width, 0);
 
+  
+  
+  struct gameComponent game = {
+    .wall_layer = wall_layer,
+    .food_layer = food_layer,
+    .screen = screen,
+    .player_snake = NULL,
+    .player_count = 0
+  };
+
+
   /*setup the boundy */
   createWall(wall_layer, bountrywallPattern);
 
   /*setup the food */
-  food food;
   for (int i = 0; i < state->foodcount; i++) {
-    while (1) {
-      food.x = rand() % state->map_width;
-      food.y = rand() % state->map_height;
-      if ((*d_array_get(wall_layer, food.x, food.y) == 0) &&
-          (*d_array_get(food_layer, food.x, food.y)) == 0) {
-        break;
-      }
-    }
+    cordinates food = findEmptyCellToSpawn(&game);
     *(d_array_get(food_layer, food.x, food.y)) = 1;
   }
 
   /*setup the snake */
 
   snake_state **states =
-      (snake_state **)malloc(sizeof(snake_state *) * (state->botcount + 1));
-  for (int i = 0; i <= state->botcount; i++) {
-    int x = rand() % state->map_width;
-    int y = rand() % state->map_height;
-    while ((*d_array_get(screen, x, y)) &&
-           (x <= 20 || x >= state->map_width - 20 || y <= 20 ||
-            y >= state->map_height - 20)) {
-      x = rand() % state->map_width;
-      y = rand() % state->map_height;
-    }
-    snake_state *s = initSnakeState(state->map_height, state->map_width, x, y);
+      (snake_state **)malloc(sizeof(snake_state *) * (state->player_count));
+  game.player_snake = states;
+  for (int i = 0; i < state->player_count; i++) {
+    
+    cordinates spawn = findEmptyCellToSpawn(&game);
+    snake_state *s = initSnakeState(state->map_height, state->map_width, spawn.x, spawn.y);
     (*d_array_get(screen, s->head->x, s->head->y)) = 1;
     states[i] = s;
+    game.player_count = i + 1;
   }
 
   int score = 0;
@@ -110,7 +166,7 @@ int game_screen(struct GameOptions* state) {
   printf("%s", RESET_CURSOR);
 
   /*game loop */
-  while (1) {
+  while (game.player_count > 0) {
     clock_gettime(CLOCK_MONOTONIC, &start_time);
     int foodEaten = 0;
     char dir = decideMove(states[0], screen);
@@ -125,7 +181,7 @@ int game_screen(struct GameOptions* state) {
         foodEaten++;
       }
     }
-    for (int i = 1; i <= state->botcount; i++) {
+    for (int i = 1; i < state->player_count; i++) {
       if (states[i]->isActive == 0) {
         continue;
       }
@@ -141,7 +197,7 @@ int game_screen(struct GameOptions* state) {
     // detect collision with other snakes
     snake *new_snake_head = states[0]->end;
     int iscolliding = 0;
-    for (int i = 1; i <= state->botcount; i++) {
+    for (int i = 1; i < state->player_count; i++) {
       if (states[i]->isActive == 0) {
         continue;
       }
@@ -156,13 +212,13 @@ int game_screen(struct GameOptions* state) {
       break;
     }
 
-    for (int i = 1; i <= state->botcount; i++) {
+    for (int i = 1; i < state->player_count; i++) {
       if (states[i]->isActive == 0) {
         continue;
       }
       int iscolliding = 0;
       snake *new_snake_head = states[i]->end;
-      for (int j = 0; j <= state->botcount; j++) {
+      for (int j = 0; j < state->player_count; j++) {
         if (states[j]->isActive == 0)
           continue;
         if (i != j) {
@@ -180,13 +236,7 @@ int game_screen(struct GameOptions* state) {
 
     // add food logic
     for (int j = 0; j < foodEaten; j++) {
-      while (1) {
-        food.x = rand() % state->map_width;
-        food.y = rand() % state->map_height;
-        if ((*d_array_get(screen, food.x, food.y)) == 0) {
-          break;
-        }
-      }
+      cordinates food = findEmptyCellToSpawn(&game);
       *(d_array_get(food_layer, food.x, food.y)) = 1;
     }
 

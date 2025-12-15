@@ -34,17 +34,9 @@ void compose_layers(DArray *screen, DArray *wall_layer, DArray *food_layer,
           (*d_array_get(screen, x, y)) = -1;
         }
       }
-      // for (int k = 0; k < BOTCOUNT + 1; k++) {
-      //   if (states[k]->isActive == 0) {
-      //     continue;
-      //   }
-      //   if (*getcoordinatesPointer(states[k], x, y) > 0) {
-      //     (*d_array_get(screen, x, y)) = 1;
-      //   }
-      // }
     }
   }
-  for (int i = 0; i < GAMESTATE.botcount + 1; i++) {
+  for (int i = 0; i < GAMECONTEXT.player_count; i++) {
     if (states[i]->isActive == 0)
       continue;
     snake *temp = states[i]->head;
@@ -82,7 +74,7 @@ void compose_layers_in_pov(DArray *screen, DArray *wall_layer,
           (*d_array_get(screen, x, y)) = -1;
         }
       }
-      for (int k = 0; k < GAMESTATE.botcount + 1; k++) {
+      for (int k = 0; k < GAMECONTEXT.player_count; k++) {
         if (states[k]->isActive == 0) {
           continue;
         }
@@ -171,8 +163,8 @@ void get_pov(DArray *screen, DArray *pov, int x, int y) {
       int world_row = i + y_offset;
       int world_col = j + x_offset;
 
-      if (world_row < 0 || world_row >= GAMESTATE.map_height || world_col < 0 ||
-          world_col >= GAMESTATE.map_width) {
+      if (world_row < 0 || world_row >= GAMECONTEXT.map_height || world_col < 0 ||
+          world_col >= GAMECONTEXT.map_width) {
         (*d_array_get(pov, j, i)) = -1;
       } else {
         (*d_array_get(pov, j, i)) =

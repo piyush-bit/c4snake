@@ -22,6 +22,6 @@ int main() {
   option_funcs[EXIT_SCREEN] = exit_screen;
   initTerminal();
   while (1) {
-    currentState = option_funcs[currentState](&GAMESTATE);
+    currentState = option_funcs[currentState](&GAMECONTEXT);
   }
 }
