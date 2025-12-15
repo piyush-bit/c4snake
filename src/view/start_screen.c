@@ -64,6 +64,11 @@ int advanceOptions(){
     return ADVANCE_SCREEN;
 }
 
+int terminalTooSmall(){
+  printf("Terminal Too small ....\n");
+  return EXIT_SCREEN;
+}
+
 
 int start_screen(struct GameOptions* state) {
   srand(time(NULL));
@@ -99,6 +104,10 @@ int start_screen(struct GameOptions* state) {
       int starting_row = (POV_HEIGHT/2)-4-(option_count*3/2);
       int starting_col = (POV_WIDTH/2)-35;
 
+      if(starting_col <0 || starting_row <0){
+        return terminalTooSmall();
+      }
+
       for(int i = 0 ; i < 10 ; i++){
         for(int j=0;j<74;j++){
           if(i==0||i==9||j<2 || j>=72){
@@ -108,11 +117,17 @@ int start_screen(struct GameOptions* state) {
           (*d_array_get(screen, j+starting_col-2, i+starting_row-1)) = Banner[i-1][j-2];
         }
       }
-
+      if(starting_col < 0 || starting_row < 0) {
+            return terminalTooSmall();
+        }else if (starting_row +8 > POV_HEIGHT - 1 - option_count * 2) {
+            return terminalTooSmall();
+        }
       for (int k = 0; k < option_count; k++) {
         size_t len = strlen(options[k]);
         starting_col = POV_WIDTH/2 - len/2 + 1;
         starting_row = POV_HEIGHT - 1 - (option_count - k) * 2;
+
+        
 
         for (int i = 0; i < 2; i++) {
           for (int j = 0; j < (int)(len + 4); j++) {
